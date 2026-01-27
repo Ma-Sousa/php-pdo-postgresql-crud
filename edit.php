@@ -1,7 +1,20 @@
 <?php
 require __DIR__ . "/db.php";
 
+$id = $_GET["id"] ?? null;
 $error = "";
+
+if (!$id) {
+    die("ID not provided.");
+}
+
+$stmt = $pdo->prepare("SELECT id, name, email FROM customers WHERE id = :id");
+$stmt->execute(["id" => $id]);
+$customer = $stmt->fetch();
+
+if (!$customer) {
+    die("Customer not found.");
+}
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $name  = trim($_POST["name"] ?? "");
@@ -15,18 +28,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Please enter a valid email.";
     } else {
         try {
-            $sql = "INSERT INTO customers (name, email) VALUES (:name, :email)";
+            $sql = "UPDATE customers SET name = :name, email = :email WHERE id = :id";
             $stmt = $pdo->prepare($sql);
 
             $stmt->execute([
+                "id"    => $customer["id"],
                 "name"  => $name,
                 "email" => $email !== "" ? $email : null,
             ]);
 
-            header("Location: index.php?success=created");
+            header("Location: index.php?success=updated");
             exit;
         } catch (PDOException $e) {
-            $error = "Error inserting record: " . $e->getMessage();
+            $error = "Error updating customer: " . $e->getMessage();
         }
     }
 }
@@ -37,13 +51,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>New Customer</title>
+  <title>Edit Customer</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <h1>New Customer</h1>
+      <h1>Edit Customer</h1>
       <a class="btn btn-secondary" href="index.php">Back</a>
     </header>
 
@@ -55,12 +69,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       <form method="POST" class="form">
         <div class="field">
           <label for="name">Name</label>
-          <input id="name" type="text" name="name" required maxlength="100">
+          <input id="name" type="text" name="name"
+                 value="<?= htmlspecialchars($customer["name"]) ?>"
+                 required maxlength="100">
         </div>
 
         <div class="field">
           <label for="email">Email (optional)</label>
-          <input id="email" type="email" name="email" maxlength="120">
+          <input id="email" type="email" name="email"
+                 value="<?= htmlspecialchars($customer["email"] ?? "") ?>"
+                 maxlength="120">
         </div>
 
         <button class="btn" type="submit">Save</button>
