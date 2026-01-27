@@ -1,4 +1,5 @@
-# PHP + PDO + PostgreSQL (Mini CRUD)
+# PHP + PDO + PostgreSQL – CRUD Application
+
 
 A small project created to practice:
 - PHP (XAMPP)
