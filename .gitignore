@@ -1,0 +1,12 @@
+# Secrets / local config
+config.php
+
+# Debug pages (optional: keep them locally, not on GitHub)
+info.php
+drivers.php
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
