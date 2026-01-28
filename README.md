@@ -3,8 +3,7 @@
 A simple backend project built with PHP and PostgreSQL to demonstrate secure CRUD operations using PDO and prepared statements.
 
 ## Features
-- List customers
-- Create, edit and delete customers
+- Full CRUD (Create, Read, Update, Delete)
 - Search customers by name or email
 - Flash messages for create/update/delete actions
 - Secure database access using prepared statements (PDO)
