@@ -1,6 +1,6 @@
 # PHP + PDO + PostgreSQL – Customers CRUD
 
-![Customers list](screenshot/customers-list.png)
+![Customers list](screenshot/customers_list.png)
 
 
 A CRUD application built with **PHP + PDO + PostgreSQL** to practice backend fundamentals (secure DB access, clean structure, pagination, and basic UI).
