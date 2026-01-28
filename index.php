@@ -5,8 +5,29 @@ require_once __DIR__ . "/flash.php";
 require_once __DIR__ . "/csrf.php";
 
 $q = trim($_GET["q"] ?? "");
-$customers = getCustomers($pdo, $q);
+
+$page = isset($_GET["page"]) ? (int)$_GET["page"] : 1;
+$page = max(1, $page);
+
+$limit = 10;
+$total = countCustomers($pdo, $q);
+
+$totalPages = max(1, (int)ceil($total / $limit));
+$page = min($page, $totalPages);
+
+$offset = ($page - 1) * $limit;
+
+$customers = getCustomersPage($pdo, $q, $limit, $offset);
 $flash = flash_get();
+
+$from = $total === 0 ? 0 : $offset + 1;
+$to = min($offset + $limit, $total);
+
+function buildPageLink(int $p, string $q): string {
+  $params = ["page" => $p];
+  if ($q !== "") $params["q"] = $q;
+  return "index.php?" . http_build_query($params);
+}
 
 $title = "Customers";
 require __DIR__ . "/partials/header.php";
@@ -24,9 +45,32 @@ require __DIR__ . "/partials/header.php";
 <?php endif; ?>
 
 <form class="search" method="GET" action="index.php">
+  <input type="hidden" name="page" value="1">
   <input type="text" name="q" placeholder="Search by name or email..." value="<?= htmlspecialchars($q) ?>">
   <button class="btn btn-secondary" type="submit">Search</button>
 </form>
+
+<div class="pagination-bar">
+  <div class="pagination-info">
+    Showing <?= $from ?>–<?= $to ?> of <?= $total ?> results
+  </div>
+
+  <div class="pagination-controls">
+    <?php if ($page > 1): ?>
+      <a class="btn btn-secondary" href="<?= htmlspecialchars(buildPageLink($page - 1, $q)) ?>">Prev</a>
+    <?php else: ?>
+      <span class="btn btn-secondary disabled">Prev</span>
+    <?php endif; ?>
+
+    <span class="pagination-page">Page <?= $page ?> / <?= $totalPages ?></span>
+
+    <?php if ($page < $totalPages): ?>
+      <a class="btn btn-secondary" href="<?= htmlspecialchars(buildPageLink($page + 1, $q)) ?>">Next</a>
+    <?php else: ?>
+      <span class="btn btn-secondary disabled">Next</span>
+    <?php endif; ?>
+  </div>
+</div>
 
 <div class="card">
   <table class="table">
