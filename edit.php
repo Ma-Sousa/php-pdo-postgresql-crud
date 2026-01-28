@@ -1,51 +1,45 @@
 <?php
 require __DIR__ . "/db.php";
+require_once __DIR__ . "/customers.php";
+require_once __DIR__ . "/flash.php";
+require_once __DIR__ . "/csrf.php";
 
-$id = $_GET["id"] ?? null;
+$id = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 $error = "";
 
-if (!$id) {
-    die("ID not provided.");
-}
+if ($id <= 0) die("ID not provided.");
 
-$stmt = $pdo->prepare("SELECT id, name, email FROM customers WHERE id = :id");
-$stmt->execute(["id" => $id]);
-$customer = $stmt->fetch();
-
-if (!$customer) {
-    die("Customer not found.");
-}
+$customer = getCustomerById($pdo, $id);
+if (!$customer) die("Customer not found.");
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name  = trim($_POST["name"] ?? "");
-    $email = trim($_POST["email"] ?? "");
+  csrf_verify($_POST["csrf"] ?? null);
 
-    if ($name === "") {
-        $error = "Name is required.";
-    } elseif (strlen($name) > 100) {
-        $error = "Name must be 100 characters or less.";
-    } elseif ($email !== "" && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Please enter a valid email.";
-    } else {
-        try {
-            $sql = "UPDATE customers SET name = :name, email = :email WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
+  $name  = trim($_POST["name"] ?? "");
+  $email = trim($_POST["email"] ?? "");
 
-            $stmt->execute([
-                "id"    => $customer["id"],
-                "name"  => $name,
-                "email" => $email !== "" ? $email : null,
-            ]);
-
-            header("Location: index.php?success=updated");
-            exit;
-        } catch (PDOException $e) {
-            $error = "Error updating customer: " . $e->getMessage();
-        }
+  if ($name === "") {
+    $error = "Name is required.";
+  } elseif (strlen($name) > 100) {
+    $error = "Name must be 100 characters or less.";
+  } elseif ($email !== "" && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $error = "Please enter a valid email.";
+  } else {
+    try {
+      updateCustomer($pdo, $id, $name, $email !== "" ? $email : null);
+      flash_set("success", "Customer updated successfully.");
+      header("Location: index.php");
+      exit;
+    } catch (PDOException $e) {
+      $error = "Error updating customer: " . $e->getMessage();
     }
+  }
+
+  // keep values typed on error
+  $customer["name"] = $name;
+  $customer["email"] = $email;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,29 +50,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 <body>
   <div class="container">
-    <header class="header">
+    <div class="header">
       <h1>Edit Customer</h1>
       <a class="btn btn-secondary" href="index.php">Back</a>
-    </header>
+    </div>
+
+    <?php if ($error): ?>
+      <div class="notice error"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
 
     <div class="card">
-      <?php if ($error): ?>
-        <div class="notice error"><?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
+      <form class="form" method="POST" action="edit.php?id=<?= (int)$id ?>">
+        <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
 
-      <form method="POST" class="form">
         <div class="field">
-          <label for="name">Name</label>
-          <input id="name" type="text" name="name"
-                 value="<?= htmlspecialchars($customer["name"]) ?>"
-                 required maxlength="100">
+          <label for="name">Name *</label>
+          <input id="name" type="text" name="name" required maxlength="100" value="<?= htmlspecialchars($customer["name"]) ?>">
         </div>
 
         <div class="field">
-          <label for="email">Email (optional)</label>
-          <input id="email" type="email" name="email"
-                 value="<?= htmlspecialchars($customer["email"] ?? "") ?>"
-                 maxlength="120">
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" maxlength="120" value="<?= htmlspecialchars($customer["email"] ?? "") ?>">
         </div>
 
         <button class="btn" type="submit">Save</button>

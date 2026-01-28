@@ -1,18 +1,22 @@
 <?php
 require __DIR__ . "/db.php";
+require_once __DIR__ . "/customers.php";
+require_once __DIR__ . "/flash.php";
+require_once __DIR__ . "/csrf.php";
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    die("Invalid request.");
+  die("Invalid request.");
 }
 
-$id = $_POST["id"] ?? null;
+csrf_verify($_POST["csrf"] ?? null);
 
-if (!$id) {
-    die("ID not provided.");
+$id = isset($_POST["id"]) ? (int)$_POST["id"] : 0;
+if ($id <= 0) {
+  die("ID not provided.");
 }
 
-$stmt = $pdo->prepare("DELETE FROM customers WHERE id = :id");
-$stmt->execute(["id" => $id]);
+deleteCustomer($pdo, $id);
 
-header("Location: index.php?success=deleted");
+flash_set("success", "Customer deleted successfully.");
+header("Location: index.php");
 exit;

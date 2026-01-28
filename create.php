@@ -1,69 +1,71 @@
 <?php
 require __DIR__ . "/db.php";
+require_once __DIR__ . "/customers.php";
+require_once __DIR__ . "/flash.php";
+require_once __DIR__ . "/csrf.php";
 
 $error = "";
+$name = "";
+$email = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name  = trim($_POST["name"] ?? "");
-    $email = trim($_POST["email"] ?? "");
+  csrf_verify($_POST["csrf"] ?? null);
 
-    if ($name === "") {
-        $error = "Name is required.";
-    } elseif (strlen($name) > 100) {
-        $error = "Name must be 100 characters or less.";
-    } elseif ($email !== "" && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Please enter a valid email.";
-    } else {
-        try {
-            $sql = "INSERT INTO customers (name, email) VALUES (:name, :email)";
-            $stmt = $pdo->prepare($sql);
+  $name  = trim($_POST["name"] ?? "");
+  $email = trim($_POST["email"] ?? "");
 
-            $stmt->execute([
-                "name"  => $name,
-                "email" => $email !== "" ? $email : null,
-            ]);
-
-            header("Location: index.php?success=created");
-            exit;
-        } catch (PDOException $e) {
-            $error = "Error inserting record: " . $e->getMessage();
-        }
+  if ($name === "") {
+    $error = "Name is required.";
+  } elseif (strlen($name) > 100) {
+    $error = "Name must be 100 characters or less.";
+  } elseif ($email !== "" && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $error = "Please enter a valid email.";
+  } else {
+    try {
+      createCustomer($pdo, $name, $email !== "" ? $email : null);
+      flash_set("success", "Customer created successfully.");
+      header("Location: index.php");
+      exit;
+    } catch (PDOException $e) {
+      $error = "Error inserting record: " . $e->getMessage();
     }
+  }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>New Customer</title>
+  <title>Create Customer</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <header class="header">
-      <h1>New Customer</h1>
+    <div class="header">
+      <h1>Create Customer</h1>
       <a class="btn btn-secondary" href="index.php">Back</a>
-    </header>
+    </div>
+
+    <?php if ($error): ?>
+      <div class="notice error"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
 
     <div class="card">
-      <?php if ($error): ?>
-        <div class="notice error"><?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
+      <form class="form" method="POST" action="create.php">
+        <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
 
-      <form method="POST" class="form">
         <div class="field">
-          <label for="name">Name</label>
-          <input id="name" type="text" name="name" required maxlength="100">
+          <label for="name">Name *</label>
+          <input id="name" type="text" name="name" required maxlength="100" value="<?= htmlspecialchars($name) ?>">
         </div>
 
         <div class="field">
-          <label for="email">Email (optional)</label>
-          <input id="email" type="email" name="email" maxlength="120">
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" maxlength="120" value="<?= htmlspecialchars($email) ?>">
         </div>
 
-        <button class="btn" type="submit">Save</button>
+        <button class="btn" type="submit">Create</button>
       </form>
     </div>
   </div>

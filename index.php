@@ -1,30 +1,13 @@
 <?php
 require __DIR__ . "/db.php";
+require_once __DIR__ . "/customers.php";
+require_once __DIR__ . "/flash.php";
+require_once __DIR__ . "/csrf.php";
 
-// Flash messages (coming from redirects)
-$success = $_GET["success"] ?? "";
-$flashMessage = "";
-
-if ($success === "created") $flashMessage = "Customer created successfully.";
-if ($success === "updated") $flashMessage = "Customer updated successfully.";
-if ($success === "deleted") $flashMessage = "Customer deleted successfully.";
-
-// Search
 $q = trim($_GET["q"] ?? "");
+$customers = getCustomers($pdo, $q);
 
-if ($q !== "") {
-    $stmt = $pdo->prepare("
-        SELECT id, name, email, created_at
-        FROM customers
-        WHERE name ILIKE :q OR email ILIKE :q
-        ORDER BY id
-    ");
-    $stmt->execute(["q" => "%{$q}%"]);
-} else {
-    $stmt = $pdo->query("SELECT id, name, email, created_at FROM customers ORDER BY id");
-}
-
-$customers = $stmt->fetchAll();
+$flash = flash_get();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,61 +19,49 @@ $customers = $stmt->fetchAll();
 </head>
 <body>
   <div class="container">
-
-    <header class="header">
+    <div class="header">
       <h1>Customers</h1>
       <a class="btn" href="create.php">+ New Customer</a>
-    </header>
+    </div>
 
-    <?php if ($flashMessage): ?>
-      <div class="notice success"><?= htmlspecialchars($flashMessage) ?></div>
+    <?php if ($flash): ?>
+      <div class="notice <?= $flash["type"] === "success" ? "success" : "error" ?>">
+        <?= htmlspecialchars($flash["message"]) ?>
+      </div>
     <?php endif; ?>
 
-    <div class="card">
-      <form method="GET" class="search">
-        <input
-          type="text"
-          name="q"
-          placeholder="Search by name or email..."
-          value="<?= htmlspecialchars($q) ?>"
-        >
-        <button class="btn btn-secondary" type="submit">Search</button>
-        <?php if ($q !== ""): ?>
-          <a class="btn btn-secondary" href="index.php">Clear</a>
-        <?php endif; ?>
-      </form>
+    <form class="search" method="GET" action="index.php">
+      <input type="text" name="q" placeholder="Search by name or email..." value="<?= htmlspecialchars($q) ?>">
+      <button class="btn btn-secondary" type="submit">Search</button>
+    </form>
 
+    <div class="card">
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 180px;">Actions</th>
-            <th style="width: 70px;">ID</th>
+            <th>Actions</th>
+            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
-            <th style="width: 220px;">Created At</th>
-        </tr>
+            <th>Created</th>
+          </tr>
         </thead>
         <tbody>
-        <?php foreach ($customers as $c): ?>
+          <?php foreach ($customers as $c): ?>
             <tr>
-            <td>
+              <td>
                 <a class="btn btn-secondary" href="edit.php?id=<?= (int)$c["id"] ?>">Edit</a>
 
-                <form method="POST" action="delete.php" class="inline-form">
-                <input type="hidden" name="id" value="<?= (int)$c["id"] ?>">
-                <button
-                    class="btn btn-danger"
-                    type="submit"
-                    onclick="return confirm('Delete this customer?')"
-                >
-                    Delete
-                </button>
+                <form method="POST" action="delete.php" class="inline-form" onsubmit="return confirm('Delete this customer?');">
+                  <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+                  <input type="hidden" name="id" value="<?= (int)$c["id"] ?>">
+                  <button class="btn btn-danger" type="submit">Delete</button>
                 </form>
-            </td>
-                <td><?= htmlspecialchars((string)$c["id"]) ?></td>
-                <td><?= htmlspecialchars($c["name"]) ?></td>
-                <td><?= htmlspecialchars($c["email"] ?? "") ?></td>
-                <td><?= htmlspecialchars((string)$c["created_at"]) ?></td>
+              </td>
+              <td><?= (int)$c["id"] ?></td>
+              <td><?= htmlspecialchars($c["name"]) ?></td>
+              <td><?= htmlspecialchars($c["email"] ?? "") ?></td>
+              <td><?= htmlspecialchars($c["created_at"]) ?></td>
             </tr>
           <?php endforeach; ?>
         </tbody>
