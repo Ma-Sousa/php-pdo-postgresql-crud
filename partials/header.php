@@ -1,17 +1,11 @@
 <?php
-// partials/header.php
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
-}
-
-$title = $title ?? "Customers";
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><?= htmlspecialchars($title) ?></title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= htmlspecialchars($title ?? "Customers CRUD") ?></title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
