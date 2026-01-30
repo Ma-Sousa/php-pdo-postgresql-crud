@@ -83,18 +83,20 @@ require __DIR__ . "/partials/header.php";
         <th>Created</th>
       </tr>
     </thead>
+
     <tbody>
       <?php foreach ($customers as $c): ?>
         <tr>
           <td>
             <a class="btn btn-secondary" href="edit.php?id=<?= (int)$c["id"] ?>">Edit</a>
 
-            <form method="POST" action="delete.php" class="inline-form" onsubmit="return confirm('Delete this customer?');">
+            <form method="POST" action="delete.php" class="inline-form">
               <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
               <input type="hidden" name="id" value="<?= (int)$c["id"] ?>">
-              <button class="btn btn-danger" type="submit">Delete</button>
+              <button type="button" class="btn btn-danger js-delete">Delete</button>
             </form>
           </td>
+
           <td><?= (int)$c["id"] ?></td>
           <td><?= htmlspecialchars($c["name"]) ?></td>
           <td><?= htmlspecialchars($c["email"] ?? "") ?></td>
