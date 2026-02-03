@@ -1,8 +1,5 @@
 <?php
-require __DIR__ . "/db.php";
-require_once __DIR__ . "/customers.php";
-require_once __DIR__ . "/flash.php";
-require_once __DIR__ . "/csrf.php";
+require_once __DIR__ . "/bootstrap.php";
 
 $error = "";
 $name = "";

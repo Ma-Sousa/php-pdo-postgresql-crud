@@ -1,8 +1,5 @@
 <?php
-require __DIR__ . "/db.php";
-require_once __DIR__ . "/customers.php";
-require_once __DIR__ . "/flash.php";
-require_once __DIR__ . "/csrf.php";
+require_once __DIR__ . "/bootstrap.php";
 
 $q = trim($_GET["q"] ?? "");
 
@@ -40,13 +37,13 @@ require __DIR__ . "/partials/header.php";
 
 <?php if ($flash): ?>
   <div class="notice <?= $flash["type"] === "success" ? "success" : "error" ?>">
-    <?= htmlspecialchars($flash["message"]) ?>
+    <?= e($flash["message"]) ?>
   </div>
 <?php endif; ?>
 
 <form class="search" method="GET" action="index.php">
   <input type="hidden" name="page" value="1">
-  <input type="text" name="q" placeholder="Search by name or email..." value="<?= htmlspecialchars($q) ?>">
+  <input type="text" name="q" placeholder="Search by name or email..." value="<?= e($q) ?>">
   <button class="btn btn-secondary" type="submit">Search</button>
 </form>
 
@@ -57,7 +54,7 @@ require __DIR__ . "/partials/header.php";
 
   <div class="pagination-controls">
     <?php if ($page > 1): ?>
-      <a class="btn btn-secondary" href="<?= htmlspecialchars(buildPageLink($page - 1, $q)) ?>">Prev</a>
+      <a class="btn btn-secondary" href="<?= e(buildPageLink($page - 1, $q)) ?>">Prev</a>
     <?php else: ?>
       <span class="btn btn-secondary disabled">Prev</span>
     <?php endif; ?>
@@ -65,7 +62,7 @@ require __DIR__ . "/partials/header.php";
     <span class="pagination-page">Page <?= $page ?> / <?= $totalPages ?></span>
 
     <?php if ($page < $totalPages): ?>
-      <a class="btn btn-secondary" href="<?= htmlspecialchars(buildPageLink($page + 1, $q)) ?>">Next</a>
+      <a class="btn btn-secondary" href="<?= e(buildPageLink($page + 1, $q)) ?>">Next</a>
     <?php else: ?>
       <span class="btn btn-secondary disabled">Next</span>
     <?php endif; ?>
@@ -91,16 +88,16 @@ require __DIR__ . "/partials/header.php";
             <a class="btn btn-secondary" href="edit.php?id=<?= (int)$c["id"] ?>">Edit</a>
 
             <form method="POST" action="delete.php" class="inline-form">
-              <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+              <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
               <input type="hidden" name="id" value="<?= (int)$c["id"] ?>">
               <button type="button" class="btn btn-danger js-delete">Delete</button>
             </form>
           </td>
 
           <td><?= (int)$c["id"] ?></td>
-          <td><?= htmlspecialchars($c["name"]) ?></td>
-          <td><?= htmlspecialchars($c["email"] ?? "") ?></td>
-          <td><?= htmlspecialchars($c["created_at"]) ?></td>
+          <td><?= e($c["name"]) ?></td>
+          <td><?= e($c["email"] ?? "") ?></td>
+          <td><?= e($c["created_at"]) ?></td>
         </tr>
       <?php endforeach; ?>
     </tbody>
