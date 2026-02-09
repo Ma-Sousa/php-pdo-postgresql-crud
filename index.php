@@ -14,7 +14,7 @@ $page = min($page, $totalPages);
 
 $offset = ($page - 1) * $limit;
 
-$customers = getCustomersPage($pdo, $q, $limit, $offset);
+$customers = $customersRepo->getPage($q, $limit, $offset);
 $flash = flash_get();
 
 $from = $total === 0 ? 0 : $offset + 1;

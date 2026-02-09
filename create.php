@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
   if (!$errors) {
     try {
-      createCustomer($pdo, $nameClean, $emailClean);
+      $customersRepo->create($nameClean, $emailClean);
       flash_set("success", "Customer created successfully.");
       redirect("index.php");
     } catch (PDOException $e) {

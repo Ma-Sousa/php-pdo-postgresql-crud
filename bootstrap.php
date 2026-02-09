@@ -9,3 +9,10 @@ require_once __DIR__ . "/db.php";
 require_once __DIR__ . "/customers.php";
 require_once __DIR__ . "/flash.php";
 require_once __DIR__ . "/csrf.php";
+require_once __DIR__ . "/src/CustomerRepository.php";
+require_once __DIR__ . "/src/Database.php";
+
+$config = require __DIR__ . "/config.php";
+$db = new Database($config);
+$pdo = $db->pdo();
+$customersRepo = new CustomerRepository($pdo);

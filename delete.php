@@ -12,7 +12,7 @@ if ($id <= 0) {
   die("ID not provided.");
 }
 
-deleteCustomer($pdo, $id);
+$customersRepo->delete($id);
 
 flash_set("success", "Customer deleted successfully.");
 header("Location: index.php");
