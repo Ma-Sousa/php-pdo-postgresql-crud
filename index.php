@@ -7,7 +7,7 @@ $page = isset($_GET["page"]) ? (int)$_GET["page"] : 1;
 $page = max(1, $page);
 
 $limit = 10;
-$total = countCustomers($pdo, $q);
+$total = $customersRepo->count($q);
 
 $totalPages = max(1, (int)ceil($total / $limit));
 $page = min($page, $totalPages);
