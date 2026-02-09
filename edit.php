@@ -37,7 +37,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
   }
 
-  // mantém o que o usuário digitou em caso de erro
   $customer["name"] = trim($name);
   $customer["email"] = trim($email);
 }
