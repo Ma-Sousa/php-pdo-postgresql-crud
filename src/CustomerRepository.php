@@ -1,4 +1,9 @@
 <?php
+declare(strict_types=1);
+
+namespace App;
+
+use PDO;
 
 final class CustomerRepository
 {
@@ -6,7 +11,7 @@ final class CustomerRepository
 
     public function findById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT id, name, email FROM customers WHERE id = :id");
+        $stmt = $this->pdo->prepare("SELECT id, name, email, created_at FROM customers WHERE id = :id");
         $stmt->execute(["id" => $id]);
         $row = $stmt->fetch();
         return $row ?: null;
@@ -14,6 +19,8 @@ final class CustomerRepository
 
     public function create(string $name, ?string $email): int
     {
+        $email = ($email === null || trim($email) === '') ? null : $email;
+
         $stmt = $this->pdo->prepare("
         INSERT INTO customers (name,email)
         VALUES (:name, :email)
@@ -23,20 +30,26 @@ final class CustomerRepository
         return (int)$stmt->fetchColumn();
     }
 
-    public function update(int $id, string $name, ?string $email): void
+    public function update(int $id, string $name, ?string $email): bool
     {
+        $email = ($email === null || trim($email) === '') ? null : $email;
+
         $stmt = $this->pdo->prepare("
         UPDATE customers
         SET name = :name, email = :email
         WHERE id = :id
         ");
         $stmt->execute(["id" => $id, "name" => $name, "email" => $email]);
+
+        return $stmt->rowCount() === 1;
     }
 
-    public function delete(int $id): void
+    public function delete(int $id): bool
     {
         $stmt = $this->pdo->prepare("DELETE FROM customers WHERE id = :id");
         $stmt->execute(["id" => $id]);
+
+        return $stmt->rowCount() === 1;
     }
 
     public function count(string $q = ""): int
