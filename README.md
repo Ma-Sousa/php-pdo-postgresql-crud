@@ -1,74 +1,117 @@
-# PHP + PDO + PostgreSQL – Customers CRUD (OOP)
+# PHP + PDO + PostgreSQL – Customers CRUD (OOP + Repository + Tests)
 
-Customers CRUD built with **PHP + PDO + PostgreSQL**, refactored to a small **OOP** structure with a Repository layer.
+CRUD de **Customers** feito com **PHP + PDO + PostgreSQL**, organizado em **OOP** com **Repository Pattern** e **testes de integração com PHPUnit**.
 
 ## Features
-- Full CRUD (Create, Read, Update, Delete)
-- Search by **name** or **email**
-- **Pagination** (COUNT + LIMIT/OFFSET)
+- CRUD completo (Create, Read, Update, Delete)
+- Busca por **name** ou **email** (ILIKE)
+- **Paginação** (COUNT + LIMIT/OFFSET)
+- Email **opcional** (salva como `NULL` quando vazio)
+- `created_at` automático (`DEFAULT NOW()`)
 - Session **flash messages**
-- **CSRF protection** on forms (create/edit/delete)
-- SQL centralized in `CustomerRepository.php`
-- PDO connection centralized in `Database.php`
+- **CSRF protection** (create/edit/delete)
+- SQL centralizado em `src/CustomerRepository.php`
+- Conexão PDO centralizada em `src/Database.php`
+- Testes de integração com rollback por transaction
 
-## How it works (high level)
-- Every page starts with `require_once "bootstrap.php"`.
-- `bootstrap.php` starts the session, loads helpers (flash/csrf/validator), reads `config.php`, builds a PDO instance via `Database`, and creates `CustomerRepository`.
-- Pages (`index.php`, `create.php`, `edit.php`, `delete.php`) only orchestrate request/response and call repository methods.
+---
 
 ## Project Structure
-- `bootstrap.php` – app bootstrap (session, helpers, config, DB + repository)
-- `Database.php` – PDO connection class
-- `CustomerRepository.php` – all SQL queries (find/create/update/delete/count/pagination)
-- `index.php` – list + search + pagination
-- `create.php` – create customer (validation + CSRF)
-- `edit.php` – edit customer (validation + CSRF)
-- `delete.php` – delete customer (POST + CSRF)
-- `validator.php` – basic validation rules
-- `flash.php` – session flash helpers
+- `bootstrap.php` – inicia sessão, carrega helpers, config, DB + repository
+- `src/Database.php` – classe de conexão PDO
+- `src/CustomerRepository.php` – queries (find/create/update/delete/count/getPage)
+- `tests/CustomerRepositoryTest.php` – testes de integração (Postgres + rollback)
+- `database/schema.sql` – schema da tabela `customers`
+- `index.php` – listagem + busca + paginação
+- `create.php` – criação (validação + CSRF)
+- `edit.php` – edição (validação + CSRF)
+- `delete.php` – delete (POST + CSRF)
+- `validator.php` – validações
+- `flash.php` – flash messages
 - `csrf.php` – CSRF helpers
-- `helpers.php` – small helper functions
-- `header.php` / `footer.php` – layout partials
-- `style.css` – UI styles
-- `app.js` – small UI behavior (if any)
-- `config.example.php` – example config (copy to `config.php`)
+- `helpers.php` – helpers gerais
+- `partials/header.php` / `partials/footer.php` – layout
+- `style.css` – estilos
+- `app.js` – JS opcional
+
+---
 
 ## Tech Stack
-- PHP (XAMPP)
+- PHP 8+
 - PostgreSQL
-- PDO
-- HTML + CSS (+ optional JS)
+- PDO (pgsql)
+- PHPUnit (via Composer)
+- HTML + CSS (+ JS opcional)
+
+---
 
 ## Requirements
-- XAMPP (Apache + PHP)
-- PostgreSQL running locally (default port 5432)
-- PHP extensions enabled:
+- PHP 8+ (XAMPP ok)
+- PostgreSQL local
+- Composer
+- Extensões PHP:
   - `pdo_pgsql`
   - `pgsql`
 
+---
+
 ## Local Setup (Windows / XAMPP)
 
-1) Copy the project to:
+1) Coloque o projeto em:
 ```text
 C:\xampp\htdocs\PHP\
 ```
-2. Create your local config:
-- Copy config.example.php
-- Rename to config.php
-- Set your PostgreSQL credentials in config.php
 
-3. Create the database table:
-``` sql
-CREATE TABLE customers (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  email VARCHAR(120) UNIQUE,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-```
-4. Start Apache using XAMPP.
+2) Config do projeto:
+- Copie `config.example.php` → `config.php`
+- Ajuste credenciais do Postgres
 
-5. Open in your browser:
-  ```text
-    http://localhost/PHP/
+3) Crie a tabela rodando o schema:
+- Abra o arquivo `database/schema.sql`
+- Rode no seu banco (pgAdmin / psql)
+
+4) Start Apache no XAMPP
+
+5) Acesse:
+```text
+http://localhost/PHP/
 ```
+
+---
+
+## Tests (PHPUnit)
+
+### Banco de testes
+Os testes usam um banco separado (recomendado), definido em `config.test.php`.
+
+Você precisa criar o DB de testes e a tabela nele também:
+
+1) Crie o DB de testes (exemplo):
+```sql
+CREATE DATABASE php_pdo_db_test;
+```
+
+2) Rode o schema também nele (`database/schema.sql`).
+
+3) Ajuste `config.test.php` com as credenciais corretas.
+
+### Rodar testes
+```bash
+composer test
+```
+
+> Os testes abrem uma transaction no `setUp()` e fazem rollback no `tearDown()` para manter o banco limpo a cada teste.
+
+---
+
+## Notes / Decisions
+- **Email é opcional**: se vier vazio (`""`), o repository transforma em `NULL` antes de salvar.
+- `created_at` é automático via `DEFAULT NOW()`.
+- `update()` e `delete()` retornam `bool` usando `rowCount()` para indicar se afetou 1 registro.
+
+---
+
+## Roadmap (next)
+- GitHub Actions rodando `composer test`
+- Melhorar UI/UX e mensagens de erro
+- Migrar para Laravel (CRUD + validações + migrations + tests)
