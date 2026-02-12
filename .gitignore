@@ -1,5 +1,10 @@
 # Secrets / local config
 config.php
+config.test.php
+/vendor/
+/.phpunit.result.cache
+/.phpunit.cache/
+/composer.lock
 
 # Debug pages (optional: keep them locally, not on GitHub)
 info.php
